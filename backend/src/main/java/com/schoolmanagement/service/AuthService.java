@@ -18,8 +18,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Service
 public class AuthService {
@@ -30,54 +28,15 @@ public class AuthService {
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
-    private final OtpService otpService;
-    private final EmailService emailService;
 
     public AuthService(UserRepository userRepository,
                        ParentRepository parentRepository,
                        PasswordEncoder passwordEncoder,
-                       JwtService jwtService,
-                       OtpService otpService,
-                       EmailService emailService) {
+                       JwtService jwtService) {
         this.userRepository = userRepository;
         this.parentRepository = parentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
-        this.otpService = otpService;
-        this.emailService = emailService;
-    }
-
-    public Map<String, Object> sendOtp(String email) {
-        if (email == null || email.trim().isEmpty()) {
-            throw new IllegalArgumentException("Email address is required");
-        }
-        String sanitizedEmail = email.trim().toLowerCase();
-
-        if (userRepository.existsByEmail(sanitizedEmail)) {
-            throw new DuplicateResourceException("Email is already registered. Please sign in or use a different email.");
-        }
-
-        String otp = otpService.generateOtp(sanitizedEmail);
-
-        // Send OTP via EmailService
-        emailService.sendOtpEmail(sanitizedEmail, otp);
-
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Verification code sent to " + sanitizedEmail + ". Please check your inbox.");
-        response.put("otpPreview", otp); // Fallback / instant test support
-        return response;
-    }
-
-    public Map<String, Object> verifyOtpOnly(String email, String code) {
-        boolean valid = otpService.verifyOtp(email, code);
-        if (!valid) {
-            throw new IllegalArgumentException("Invalid or expired verification code.");
-        }
-        Map<String, Object> response = new HashMap<>();
-        response.put("success", true);
-        response.put("message", "Email verified successfully!");
-        return response;
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -107,11 +66,6 @@ public class AuthService {
             throw new DuplicateResourceException("Email already exists: " + sanitizedEmail);
         }
 
-        // Verify OTP
-        if (!otpService.verifyOtp(sanitizedEmail, request.getOtp())) {
-            throw new IllegalArgumentException("Invalid or expired verification code. Please request a new code.");
-        }
-
         User user = new User();
         user.setName(request.getName().trim());
         user.setEmail(sanitizedEmail);
@@ -129,10 +83,7 @@ public class AuthService {
             parentRepository.save(parent);
         }
 
-        // Clean up OTP after successful registration
-        otpService.clearOtp(sanitizedEmail);
-
-        logger.info("User registered and verified: {}", sanitizedEmail);
+        logger.info("User registered: {}", sanitizedEmail);
 
         return "User registered successfully";
     }

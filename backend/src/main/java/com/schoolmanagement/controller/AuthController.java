@@ -11,8 +11,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.Map;
-
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {
@@ -21,19 +19,6 @@ public class AuthController {
 
     public AuthController(AuthService authService) {
         this.authService = authService;
-    }
-
-    @PostMapping("/send-otp")
-    public ResponseEntity<Map<String, Object>> sendOtp(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        return ResponseEntity.ok(authService.sendOtp(email));
-    }
-
-    @PostMapping("/verify-otp")
-    public ResponseEntity<Map<String, Object>> verifyOtp(@RequestBody Map<String, String> request) {
-        String email = request.get("email");
-        String otp = request.get("otp");
-        return ResponseEntity.ok(authService.verifyOtpOnly(email, otp));
     }
 
     @PostMapping("/login")
