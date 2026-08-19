@@ -31,17 +31,20 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final OtpService otpService;
+    private final EmailService emailService;
 
     public AuthService(UserRepository userRepository,
                        ParentRepository parentRepository,
                        PasswordEncoder passwordEncoder,
                        JwtService jwtService,
-                       OtpService otpService) {
+                       OtpService otpService,
+                       EmailService emailService) {
         this.userRepository = userRepository;
         this.parentRepository = parentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.otpService = otpService;
+        this.emailService = emailService;
     }
 
     public Map<String, Object> sendOtp(String email) {
@@ -56,10 +59,13 @@ public class AuthService {
 
         String otp = otpService.generateOtp(sanitizedEmail);
 
+        // Send OTP via EmailService
+        emailService.sendOtpEmail(sanitizedEmail, otp);
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "Verification code sent successfully to " + sanitizedEmail);
-        response.put("otpPreview", otp); // Allows seamless instant testing without SMTP delays
+        response.put("message", "Verification code sent to " + sanitizedEmail + ". Please check your inbox.");
+        response.put("otpPreview", otp); // Fallback / instant test support
         return response;
     }
 
