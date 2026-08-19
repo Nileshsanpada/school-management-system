@@ -1,13 +1,7 @@
 ﻿{
-  "buildCommand": "npm --prefix frontend install && npm --prefix frontend run build",
-  "outputDirectory": "frontend/dist",
-  "routes": [
-    {
-      "src": "/[^.]+",
-      "dest": "/index.html",
-      "status": 200
-    }
-  ],
+  "framework": "vite",
+  "outputDirectory": "dist",
+  "cleanUrls": true,
   "rewrites": [
     {
       "source": "/(.*)",
