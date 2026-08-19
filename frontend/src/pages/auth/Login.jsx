@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import authService from '../../services/authService'
 import { useAuth } from '../../hooks/useAuth'
@@ -8,15 +8,38 @@ import ErrorMessage from '../../components/ErrorMessage'
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [touched, setTouched] = useState({ email: false, password: false })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
 
+  // Real-time Email validation check
+  const isEmailValid = useMemo(() => {
+    if (!email) return false
+    return /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(email.trim())
+  }, [email])
+
+  const isPasswordValid = useMemo(() => {
+    return password.length >= 6
+  }, [password])
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
+    setTouched({ email: true, password: true })
+
+    if (!isEmailValid) {
+      setError('Please enter a valid email address (e.g. admin@school.com).')
+      return
+    }
+
+    if (!isPasswordValid) {
+      setError('Password must be at least 6 characters.')
+      return
+    }
+
     setLoading(true)
     try {
       const res = await authService.login({ email, password })
@@ -36,58 +59,43 @@ export default function Login() {
   const fillDemoCredentials = (demoEmail, demoPassword) => {
     setEmail(demoEmail)
     setPassword(demoPassword)
+    setTouched({ email: true, password: true })
+    setError('')
   }
 
   return (
-    <div style={{
-      display: 'flex',
-      justifyContent: 'center',
-      alignItems: 'center',
-      minHeight: '100vh',
-      backgroundColor: 'var(--bg-page)',
-      backgroundImage: 'radial-gradient(at 0% 0%, var(--primary-glow) 0px, transparent 50%), radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0px, transparent 50%)',
-      padding: '24px',
-      position: 'relative'
-    }}>
-      {/* Theme Toggle Button at top right */}
+    <div className="auth-container">
+      {/* Theme Toggle Button */}
       <button
         type="button"
         className="theme-toggle-btn"
         onClick={toggleTheme}
-        style={{ position: 'absolute', top: '24px', right: '24px' }}
+        style={{ position: 'absolute', top: '20px', right: '20px' }}
         title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
       >
         {theme === 'dark' ? '☀️' : '🌙'}
       </button>
 
-      <div style={{
-        width: '100%',
-        maxWidth: '460px',
-        backgroundColor: 'var(--bg-surface)',
-        border: '1px solid var(--border-color)',
-        borderRadius: 'var(--radius-lg)',
-        padding: '38px 34px',
-        boxShadow: 'var(--shadow-lg)'
-      }}>
-        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+      <div className="auth-card">
+        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
           <div style={{
             fontSize: '32px',
-            width: '64px',
-            height: '64px',
+            width: '60px',
+            height: '60px',
             borderRadius: 'var(--radius-md)',
             background: 'linear-gradient(135deg, var(--primary), #8b5cf6)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            margin: '0 auto 16px',
+            margin: '0 auto 14px',
             boxShadow: '0 8px 16px var(--primary-glow)'
           }}>
             🏫
           </div>
-          <h2 style={{ fontSize: '26px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '800', color: 'var(--text-primary)', letterSpacing: '-0.03em' }}>
             EduCore SMS
           </h2>
-          <p style={{ fontSize: '14px', color: 'var(--text-secondary)', marginTop: '4px' }}>
+          <p style={{ fontSize: '13.5px', color: 'var(--text-secondary)', marginTop: '4px' }}>
             Sign in to access your school portal
           </p>
         </div>
@@ -101,20 +109,42 @@ export default function Login() {
               type="email"
               placeholder="e.g. admin@school.com"
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value)
+                setTouched(prev => ({ ...prev, email: true }))
+              }}
+              onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+              className={touched.email ? (isEmailValid ? 'input-valid' : 'input-invalid') : ''}
               required
             />
+            {touched.email && (
+              <div className={`validation-hint ${isEmailValid ? 'valid' : 'invalid'}`}>
+                {isEmailValid ? '✓ Valid email format' : '○ Please enter a valid email with @ domain'}
+              </div>
+            )}
           </div>
+
           <div className="form-group">
             <label>Password</label>
             <input
               type="password"
               placeholder="Enter your password"
               value={password}
-              onChange={e => setPassword(e.target.value)}
+              onChange={e => {
+                setPassword(e.target.value)
+                setTouched(prev => ({ ...prev, password: true }))
+              }}
+              onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+              className={touched.password ? (isPasswordValid ? 'input-valid' : 'input-invalid') : ''}
               required
             />
+            {touched.password && (
+              <div className={`validation-hint ${isPasswordValid ? 'valid' : 'invalid'}`}>
+                {isPasswordValid ? '✓ Password format met' : '○ Minimum 6 characters required'}
+              </div>
+            )}
           </div>
+
           <button
             type="submit"
             className="btn btn-primary"
@@ -126,14 +156,22 @@ export default function Login() {
         </form>
 
         <div style={{
-          marginTop: '24px',
-          paddingTop: '20px',
+          marginTop: '22px',
+          paddingTop: '18px',
           borderTop: '1px solid var(--border-color)'
         }}>
-          <div style={{ fontSize: '11.5px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', textAlign: 'center', marginBottom: '12px', letterSpacing: '0.05em' }}>
+          <div style={{
+            fontSize: '11px',
+            fontWeight: '700',
+            color: 'var(--text-muted)',
+            textTransform: 'uppercase',
+            textAlign: 'center',
+            marginBottom: '10px',
+            letterSpacing: '0.05em'
+          }}>
             ⚡ 1-Click Demo Logins:
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+          <div className="auth-demo-grid">
             <button
               type="button"
               className="btn btn-secondary"
@@ -161,7 +199,7 @@ export default function Login() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: 'var(--text-secondary)' }}>
+        <div style={{ textAlign: 'center', marginTop: '22px', fontSize: '13.5px', color: 'var(--text-secondary)' }}>
           Don't have an account?{' '}
           <Link to="/register" style={{ color: 'var(--primary)', fontWeight: '600', textDecoration: 'none' }}>
             Create Account

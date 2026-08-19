@@ -2,7 +2,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useTheme } from '../context/ThemeContext'
 
-export default function Navbar() {
+export default function Navbar({ onToggleSidebar }) {
   const { user, role, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -22,10 +22,21 @@ export default function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar-left">
+        {/* Mobile Hamburger Menu Toggle */}
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={onToggleSidebar}
+          aria-label="Toggle Navigation Menu"
+          title="Open Menu"
+        >
+          ☰
+        </button>
+
         <div className="navbar-title">
-          {role === 'ADMIN' && '👑 Admin Management Console'}
-          {role === 'TEACHER' && '👨‍🏫 Faculty & Academic Portal'}
-          {role === 'PARENT' && '👨‍👩‍👧 Parent Access Portal'}
+          {role === 'ADMIN' && '👑 Admin Management'}
+          {role === 'TEACHER' && '👨‍🏫 Faculty Portal'}
+          {role === 'PARENT' && '👨‍👩‍👧 Parent Access'}
           {!role && 'School Portal'}
         </div>
       </div>
@@ -57,7 +68,7 @@ export default function Navbar() {
         {/* Logout Button */}
         <button
           className="btn btn-secondary btn-sm"
-          style={{ padding: '8px 14px', borderRadius: 'var(--radius-full)' }}
+          style={{ padding: '8px 12px', borderRadius: 'var(--radius-full)' }}
           onClick={handleLogout}
         >
           🚪 Logout

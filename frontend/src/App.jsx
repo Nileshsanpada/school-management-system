@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { AuthProvider, useAuthContext } from './context/AuthContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -7,6 +8,7 @@ import AppRoutes from './routes/AppRoutes'
 
 function AppContent() {
   const { isAuthenticated } = useAuthContext()
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   const location = useLocation()
   const isAuthPage = ['/login', '/register'].includes(location.pathname)
 
@@ -16,9 +18,12 @@ function AppContent() {
 
   return (
     <div className="app-container">
-      <Sidebar />
+      <Sidebar
+        isOpen={mobileSidebarOpen}
+        onClose={() => setMobileSidebarOpen(false)}
+      />
       <div className="page-wrapper">
-        <Navbar />
+        <Navbar onToggleSidebar={() => setMobileSidebarOpen(prev => !prev)} />
         <main className="content-container">
           <AppRoutes />
         </main>
