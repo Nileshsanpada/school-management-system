@@ -1,7 +1,17 @@
 import axios from 'axios'
 
+const isLocalhost = typeof window !== 'undefined' && (
+  window.location.hostname === 'localhost' || 
+  window.location.hostname === '127.0.0.1' ||
+  window.location.hostname === ''
+)
+
+const defaultBaseUrl = isLocalhost
+  ? 'http://localhost:8080/api'
+  : 'https://school-management-system-ysml.onrender.com/api'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'https://school-management-system-ysml.onrender.com/api',
+  baseURL: import.meta.env.VITE_API_BASE_URL || defaultBaseUrl,
   headers: { 'Content-Type': 'application/json' }
 })
 
