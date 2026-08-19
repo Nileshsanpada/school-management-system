@@ -1,0 +1,10 @@
+CREATE INDEX idx_students_class ON students(current_class_id);
+CREATE INDEX idx_students_parent ON students(parent_id);
+CREATE INDEX idx_attendance_student ON attendance(student_id);
+CREATE INDEX idx_attendance_date ON attendance(attendance_date);
+CREATE INDEX idx_results_student ON results(student_id);
+CREATE INDEX idx_results_examination ON results(examination_id);
+CREATE INDEX idx_fees_student ON fees(student_id);
+CREATE INDEX idx_fees_status ON fees(status);
+CREATE INDEX idx_payments_fee ON payments(fee_id);
+CREATE INDEX idx_admissions_status ON admissions(status);
