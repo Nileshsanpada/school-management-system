@@ -18,6 +18,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Service
 public class AuthService {
@@ -28,16 +30,52 @@ public class AuthService {
     private final ParentRepository parentRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final OtpService otpService;
 
-    public AuthService(UserRepository userRepository, ParentRepository parentRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+    public AuthService(UserRepository userRepository,
+                       ParentRepository parentRepository,
+                       PasswordEncoder passwordEncoder,
+                       JwtService jwtService,
+                       OtpService otpService) {
         this.userRepository = userRepository;
         this.parentRepository = parentRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.otpService = otpService;
+    }
+
+    public Map<String, Object> sendOtp(String email) {
+        if (email == null || email.trim().isEmpty()) {
+            throw new IllegalArgumentException("Email address is required");
+        }
+        String sanitizedEmail = email.trim().toLowerCase();
+
+        if (userRepository.existsByEmail(sanitizedEmail)) {
+            throw new DuplicateResourceException("Email is already registered. Please sign in or use a different email.");
+        }
+
+        String otp = otpService.generateOtp(sanitizedEmail);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Verification code sent successfully to " + sanitizedEmail);
+        response.put("otpPreview", otp); // Allows seamless instant testing without SMTP delays
+        return response;
+    }
+
+    public Map<String, Object> verifyOtpOnly(String email, String code) {
+        boolean valid = otpService.verifyOtp(email, code);
+        if (!valid) {
+            throw new IllegalArgumentException("Invalid or expired verification code.");
+        }
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "Email verified successfully!");
+        return response;
     }
 
     public LoginResponse login(LoginRequest request) {
-        User user = userRepository.findByEmail(request.getEmail())
+        User user = userRepository.findByEmail(request.getEmail().trim().toLowerCase())
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with email: " + request.getEmail()));
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
@@ -57,13 +95,20 @@ public class AuthService {
     }
 
     public String register(RegisterRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new DuplicateResourceException("Email already exists: " + request.getEmail());
+        String sanitizedEmail = request.getEmail().trim().toLowerCase();
+
+        if (userRepository.existsByEmail(sanitizedEmail)) {
+            throw new DuplicateResourceException("Email already exists: " + sanitizedEmail);
+        }
+
+        // Verify OTP
+        if (!otpService.verifyOtp(sanitizedEmail, request.getOtp())) {
+            throw new IllegalArgumentException("Invalid or expired verification code. Please request a new code.");
         }
 
         User user = new User();
-        user.setName(request.getName());
-        user.setEmail(request.getEmail());
+        user.setName(request.getName().trim());
+        user.setEmail(sanitizedEmail);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
         user.setRole(request.getRole());
         user.setCreatedAt(LocalDateTime.now());
@@ -78,7 +123,10 @@ public class AuthService {
             parentRepository.save(parent);
         }
 
-        logger.info("User registered: {}", request.getEmail());
+        // Clean up OTP after successful registration
+        otpService.clearOtp(sanitizedEmail);
+
+        logger.info("User registered and verified: {}", sanitizedEmail);
 
         return "User registered successfully";
     }
