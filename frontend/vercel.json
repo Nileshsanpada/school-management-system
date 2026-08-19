@@ -1,15 +1,11 @@
-﻿{
+{
   "routes": [
     {
-      "src": "/[^.]+",
-      "dest": "/index.html",
-      "status": 200
-    }
-  ],
-  "rewrites": [
+      "handle": "filesystem"
+    },
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "src": "/.*",
+      "dest": "/index.html"
     }
   ]
 }
