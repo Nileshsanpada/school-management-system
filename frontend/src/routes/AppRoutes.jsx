@@ -32,11 +32,15 @@ import ChildAttendance from '../pages/parent/ChildAttendance'
 import ChildResults from '../pages/parent/ChildResults'
 import ChildFees from '../pages/parent/ChildFees'
 
+// User Profile Page
+import Profile from '../pages/profile/Profile'
+
 export default function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/profile" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER', 'PARENT']}><Profile /></ProtectedRoute>} />
       
       {/* Admin Routes */}
       <Route path="/dashboard" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><Dashboard /></ProtectedRoute>} />

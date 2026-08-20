@@ -116,6 +116,11 @@ export default function Sidebar({ isOpen, onClose }) {
               </NavLink>
             </>
           )}
+
+          <div className="sidebar-section-title">Account</div>
+          <NavLink to="/profile" onClick={handleNavClick} className={({isActive}) => isActive ? 'active' : ''}>
+            <span>👤</span> My Profile
+          </NavLink>
         </nav>
       </aside>
     </>

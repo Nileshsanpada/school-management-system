@@ -52,8 +52,13 @@ export default function Navbar({ onToggleSidebar }) {
           {theme === 'dark' ? '☀️' : '🌙'}
         </button>
 
-        {/* User Profile Chip */}
-        <div className="user-chip">
+        {/* User Profile Chip - Click to open Profile */}
+        <div 
+          className="user-chip" 
+          onClick={() => navigate('/profile')}
+          style={{ cursor: 'pointer', transition: 'all var(--transition-fast)' }}
+          title="Click to view & edit your profile"
+        >
           <div className="user-avatar">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
           </div>
