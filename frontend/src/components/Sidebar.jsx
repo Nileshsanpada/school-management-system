@@ -93,6 +93,9 @@ export default function Sidebar({ isOpen, onClose }) {
               <NavLink to="/dashboard" onClick={handleNavClick} className={({isActive}) => isActive ? 'active' : ''}>
                 <span>📊</span> Dashboard
               </NavLink>
+              <NavLink to="/students" onClick={handleNavClick} className={({isActive}) => isActive ? 'active' : ''}>
+                <span>🎓</span> Students Directory
+              </NavLink>
               <NavLink to="/attendance" onClick={handleNavClick} className={({isActive}) => isActive ? 'active' : ''}>
                 <span>📋</span> Mark Attendance
               </NavLink>

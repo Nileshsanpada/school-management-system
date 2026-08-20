@@ -45,9 +45,9 @@ export default function AppRoutes() {
       <Route path="/admissions/new" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdmissionForm /></ProtectedRoute>} />
       <Route path="/admissions/:id" element={<ProtectedRoute allowedRoles={['ADMIN']}><AdmissionDetails /></ProtectedRoute>} />
       
-      <Route path="/students" element={<ProtectedRoute allowedRoles={['ADMIN']}><StudentList /></ProtectedRoute>} />
+      <Route path="/students" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentList /></ProtectedRoute>} />
       <Route path="/students/:id/edit" element={<ProtectedRoute allowedRoles={['ADMIN']}><StudentForm /></ProtectedRoute>} />
-      <Route path="/students/:id" element={<ProtectedRoute allowedRoles={['ADMIN']}><StudentDetails /></ProtectedRoute>} />
+      <Route path="/students/:id" element={<ProtectedRoute allowedRoles={['ADMIN', 'TEACHER']}><StudentDetails /></ProtectedRoute>} />
       
       <Route path="/academic-years" element={<ProtectedRoute allowedRoles={['ADMIN']}><AcademicYears /></ProtectedRoute>} />
       <Route path="/classes" element={<ProtectedRoute allowedRoles={['ADMIN']}><Classes /></ProtectedRoute>} />
