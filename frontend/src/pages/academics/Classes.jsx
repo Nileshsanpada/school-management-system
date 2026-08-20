@@ -33,6 +33,13 @@ export default function Classes() {
 
   if (loading) return <Loading />
 
+  const sortedClasses = [...(classes || [])].sort((a, b) => {
+    const numA = parseInt(a.name?.replace(/\D/g, '') || '999', 10)
+    const numB = parseInt(b.name?.replace(/\D/g, '') || '999', 10)
+    if (numA !== numB) return numA - numB
+    return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true })
+  })
+
   return (
     <div>
       <div className="page-header">
@@ -71,14 +78,14 @@ export default function Classes() {
               </tr>
             </thead>
             <tbody>
-              {(!classes || classes.length === 0) ? (
+              {(!sortedClasses || sortedClasses.length === 0) ? (
                 <tr>
                   <td colSpan="2" className="empty-state">
                     No classes added yet. Use the form on the left to create one.
                   </td>
                 </tr>
               ) : (
-                classes.map(c => (
+                sortedClasses.map(c => (
                   <tr key={c.id}>
                     <td style={{ fontWeight: '600' }}>{c.name}</td>
                     <td style={{ textAlign: 'right' }}>

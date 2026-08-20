@@ -19,9 +19,22 @@ export default function Attendance() {
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
 
+  const sortClasses = (list) => {
+    return [...list].sort((a, b) => {
+      const numA = parseInt(a.name?.replace(/\D/g, '') || '999', 10)
+      const numB = parseInt(b.name?.replace(/\D/g, '') || '999', 10)
+      if (numA !== numB) return numA - numB
+      return (a.name || '').localeCompare(b.name || '', undefined, { numeric: true })
+    })
+  }
+
+  const sortSections = (list) => {
+    return [...list].sort((a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true }))
+  }
+
   useEffect(() => {
     academicService.classes.getAll()
-      .then(res => setClasses(res.data))
+      .then(res => setClasses(sortClasses(res.data || [])))
       .catch(() => setError('Failed to load classes'))
       .finally(() => setLoading(false))
   }, [])
@@ -36,7 +49,7 @@ export default function Attendance() {
     if (cid) {
       try {
         const res = await academicService.sections.getByClass(cid)
-        setSections(res.data)
+        setSections(sortSections(res.data || []))
       } catch (err) {
         setSections([])
       }
@@ -52,11 +65,13 @@ export default function Attendance() {
     setSuccess('')
     try {
       const sRes = await studentService.getByClassAndSection(classId, sectionId)
-      const studentsList = sRes.data
+      const studentsList = sRes.data || []
       setStudents(studentsList)
       
       if (studentsList.length === 0) {
-        setError('No students found in this Class/Section. Please check if students are assigned to this section.')
+        const selectedClass = classes.find(c => String(c.id) === String(classId))?.name || 'Selected Class'
+        const selectedSec = sections.find(s => String(s.id) === String(sectionId))?.name || 'Selected Section'
+        setError(`No active students found enrolled in ${selectedClass} (Section ${selectedSec}).`)
         setLoading(false)
         return
       }
@@ -67,7 +82,7 @@ export default function Attendance() {
         initialData[s.id] = { status: 'PRESENT', remarks: '' }
       })
       
-      // Try to load existing attendance for this date, class, section
+      // Load existing attendance for this date, class, section if recorded earlier
       try {
         const aRes = await attendanceService.getByDate(classId, sectionId, date)
         if (aRes.data && aRes.data.length > 0) {
@@ -76,10 +91,10 @@ export default function Attendance() {
               initialData[a.studentId] = { status: a.status, remarks: a.remarks || '' }
             }
           })
-          setSuccess(`Loaded existing attendance for ${date}. You can update and re-save.`)
+          setSuccess(`📋 Found existing attendance records for ${date}. You can modify and update below.`)
         }
       } catch (err) {
-        // Existing attendance not found — fresh entry, which is fine
+        // Fresh attendance entry
       }
       setAttendanceData(initialData)
     } catch (err) {
@@ -98,6 +113,7 @@ export default function Attendance() {
   }
 
   const handleSubmit = async () => {
+    if (!students || students.length === 0) return
     setSubmitting(true)
     setError('')
     setSuccess('')
@@ -121,9 +137,9 @@ export default function Attendance() {
       }
       
       if (failCount === 0) {
-        setSuccess(`✅ Attendance saved successfully for all ${successCount} students!`)
+        setSuccess(`✅ Attendance recorded & saved successfully for all ${successCount} students on ${date}!`)
       } else {
-        setSuccess(`Saved ${successCount} students. ${failCount} had issues (may already be recorded).`)
+        setSuccess(`✅ Saved attendance for ${successCount} students (${failCount} errors).`)
       }
     } catch (err) {
       setError('Failed to save attendance. Please try again.')
@@ -139,56 +155,82 @@ export default function Attendance() {
   return (
     <div>
       <div className="page-header">
-        <h1>📋 Record Attendance</h1>
+        <div>
+          <h1>📋 Daily Attendance Management</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+            Select date, class and section to mark or modify student attendance records
+          </p>
+        </div>
       </div>
 
       <div className="card" style={{ marginBottom: '24px' }}>
         <div className="form-row">
           <div className="form-group">
-            <label>Date</label>
+            <label>Attendance Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
           </div>
           <div className="form-group">
-            <label>Class</label>
+            <label>Class (1 to 12)</label>
             <select value={classId} onChange={handleClassChange}>
-              <option value="">Select Class</option>
+              <option value="">-- Select Class --</option>
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
           <div className="form-group">
             <label>Section</label>
-            <select value={sectionId} onChange={e => setSectionId(e.target.value)}>
-              <option value="">Select Section</option>
-              {sections.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+            <select value={sectionId} onChange={e => setSectionId(e.target.value)} disabled={!classId}>
+              <option value="">-- Select Section --</option>
+              {sections.map(s => <option key={s.id} value={s.id}>Section {s.name}</option>)}
             </select>
           </div>
           <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button className="btn btn-primary" style={{ width: '100%', minHeight: '42px' }} onClick={loadStudents} disabled={!classId || !sectionId || !date || loading}>
+            <button 
+              className="btn btn-primary" 
+              style={{ width: '100%', minHeight: '42px' }} 
+              onClick={loadStudents} 
+              disabled={!classId || !sectionId || !date || loading}
+            >
               {loading ? 'Loading...' : '🔍 Load Students'}
             </button>
           </div>
         </div>
       </div>
 
-      {error && <ErrorMessage message={error} />}
-      {success && <div className="status-badge active" style={{ padding: '12px', marginBottom: '16px', display: 'block', fontSize: '14px' }}>{success}</div>}
+      {error && (
+        <div style={{ marginBottom: '16px' }}>
+          <ErrorMessage message={error} />
+          {students.length === 0 && classId && (
+            <div style={{ marginTop: '8px', textAlign: 'center' }}>
+              <Link to="/students" className="btn btn-secondary btn-sm">
+                🎓 View or Assign Students in Directory →
+              </Link>
+            </div>
+          )}
+        </div>
+      )}
+
+      {success && (
+        <div className="status-badge active" style={{ padding: '14px 18px', marginBottom: '18px', display: 'block', fontSize: '14px' }}>
+          {success}
+        </div>
+      )}
 
       {students.length > 0 && (
         <div className="card" style={{ overflowX: 'auto' }}>
           {/* Quick Actions Bar */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
             <div style={{ fontSize: '14px', color: 'var(--text-secondary)' }}>
-              <strong>{students.length}</strong> students loaded | 
-              <span style={{ color: '#22c55e' }}> ✓ {presentCount} Present</span> | 
-              <span style={{ color: '#ef4444' }}> ✕ {absentCount} Absent</span> | 
-              <span style={{ color: '#f59e0b' }}> ⏱ {lateCount} Late</span>
+              <strong>{students.length}</strong> students enrolled &bull; 
+              <span style={{ color: '#22c55e', fontWeight: 600 }}> ✓ {presentCount} Present</span> &bull; 
+              <span style={{ color: '#ef4444', fontWeight: 600 }}> ✕ {absentCount} Absent</span> &bull; 
+              <span style={{ color: '#f59e0b', fontWeight: 600 }}> ⏱ {lateCount} Late</span>
             </div>
             <div style={{ display: 'flex', gap: '8px' }}>
-              <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={() => markAllAs('PRESENT')}>
-                All Present
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => markAllAs('PRESENT')}>
+                ✓ Mark All Present
               </button>
-              <button className="btn btn-secondary" style={{ fontSize: '12px', padding: '6px 12px' }} onClick={() => markAllAs('ABSENT')}>
-                All Absent
+              <button type="button" className="btn btn-secondary btn-sm" onClick={() => markAllAs('ABSENT')}>
+                ✕ Mark All Absent
               </button>
             </div>
           </div>
@@ -196,11 +238,11 @@ export default function Attendance() {
           <table>
             <thead>
               <tr>
-                <th>#</th>
+                <th style={{ width: '50px' }}>#</th>
                 <th>Student ID</th>
-                <th>Name</th>
-                <th>Status</th>
-                <th>Remarks</th>
+                <th>Full Name</th>
+                <th style={{ width: '160px' }}>Attendance Status</th>
+                <th>Remarks / Notes</th>
               </tr>
             </thead>
             <tbody>
@@ -210,16 +252,17 @@ export default function Attendance() {
                                    attendanceData[s.id]?.status === 'LATE' ? 'rgba(245,158,11,0.08)' : 'transparent' 
                 }}>
                   <td>{idx + 1}</td>
-                  <td style={{ fontFamily: 'monospace', fontSize: '12px' }}>{s.studentId}</td>
+                  <td style={{ fontFamily: 'monospace', fontSize: '12.5px', fontWeight: 600 }}>{s.studentId}</td>
                   <td><strong>{s.firstName} {s.lastName}</strong></td>
                   <td>
                     <select 
                       value={attendanceData[s.id]?.status || 'PRESENT'} 
                       onChange={e => setAttendanceData({...attendanceData, [s.id]: {...attendanceData[s.id], status: e.target.value}})}
                       style={{ 
-                        padding: '6px 10px', 
-                        borderRadius: '6px',
-                        fontWeight: '600',
+                        padding: '8px 12px', 
+                        borderRadius: 'var(--radius-sm)',
+                        fontWeight: '700',
+                        width: '100%',
                         color: attendanceData[s.id]?.status === 'PRESENT' ? '#22c55e' : 
                                attendanceData[s.id]?.status === 'ABSENT' ? '#ef4444' : '#f59e0b'
                       }}
@@ -234,8 +277,8 @@ export default function Attendance() {
                       type="text" 
                       value={attendanceData[s.id]?.remarks || ''} 
                       onChange={e => setAttendanceData({...attendanceData, [s.id]: {...attendanceData[s.id], remarks: e.target.value}})}
-                      placeholder="Optional remarks"
-                      style={{ padding: '6px 10px', width: '100%' }}
+                      placeholder="Optional notes (e.g. sick leave)"
+                      style={{ padding: '8px 12px', width: '100%' }}
                     />
                   </td>
                 </tr>
@@ -244,12 +287,13 @@ export default function Attendance() {
           </table>
           <div style={{ marginTop: '24px', textAlign: 'right' }}>
             <button 
+              type="button"
               className="btn btn-primary" 
               onClick={handleSubmit} 
               disabled={submitting}
-              style={{ padding: '12px 28px', fontSize: '15px' }}
+              style={{ padding: '12px 32px', fontSize: '15px', minWidth: '180px' }}
             >
-              {submitting ? '⏳ Saving Attendance...' : '💾 Save Attendance'}
+              {submitting ? '⏳ Saving Records...' : '💾 Save Attendance'}
             </button>
           </div>
         </div>

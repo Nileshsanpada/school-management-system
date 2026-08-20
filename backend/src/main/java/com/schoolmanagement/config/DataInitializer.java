@@ -103,29 +103,53 @@ public class DataInitializer implements CommandLineRunner {
                 return academicYearRepository.save(y);
             });
 
-            // 5. Classes
-            SchoolClass class10 = classRepository.findByName("Class 10").orElseGet(() -> {
-                SchoolClass c = new SchoolClass();
-                c.setName("Class 10");
-                return classRepository.save(c);
-            });
-
-            classRepository.findByName("Class 9").orElseGet(() -> {
-                SchoolClass c = new SchoolClass();
-                c.setName("Class 9");
-                return classRepository.save(c);
-            });
-
-            // 6. Section
-            final SchoolClass c10Final = class10;
+            // 5. Classes & Sections (Class 1 to Class 12 with Sections A & B)
             final AcademicYear yrFinal = year;
-            Section secA = sectionRepository.findBySchoolClassId(class10.getId()).stream().findFirst().orElseGet(() -> {
-                Section s = new Section();
-                s.setName("A");
-                s.setSchoolClass(c10Final);
-                s.setAcademicYear(yrFinal);
-                return sectionRepository.save(s);
-            });
+            SchoolClass class10 = null;
+            Section secA = null;
+
+            for (int i = 1; i <= 12; i++) {
+                final String className = "Class " + i;
+                SchoolClass sc = classRepository.findByName(className).orElseGet(() -> {
+                    SchoolClass c = new SchoolClass();
+                    c.setName(className);
+                    return classRepository.save(c);
+                });
+
+                if (i == 10) {
+                    class10 = sc;
+                }
+
+                // Create Section A and Section B for each class
+                final SchoolClass scFinal = sc;
+                Section sA = sectionRepository.findBySchoolClassId(sc.getId()).stream()
+                        .filter(s -> "A".equalsIgnoreCase(s.getName()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            Section s = new Section();
+                            s.setName("A");
+                            s.setSchoolClass(scFinal);
+                            s.setAcademicYear(yrFinal);
+                            return sectionRepository.save(s);
+                        });
+
+                sectionRepository.findBySchoolClassId(sc.getId()).stream()
+                        .filter(s -> "B".equalsIgnoreCase(s.getName()))
+                        .findFirst()
+                        .orElseGet(() -> {
+                            Section s = new Section();
+                            s.setName("B");
+                            s.setSchoolClass(scFinal);
+                            s.setAcademicYear(yrFinal);
+                            return sectionRepository.save(s);
+                        });
+
+                if (i == 10) {
+                    secA = sA;
+                }
+            }
+
+            final SchoolClass c10Final = class10;
 
             // 7. Subjects
             Subject math = subjectRepository.findByCode("MATH101").orElseGet(() -> {

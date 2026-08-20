@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Service
@@ -20,7 +21,26 @@ public class ClassService {
     }
 
     public List<SchoolClass> getAllClasses() {
-        return classRepository.findAll();
+        List<SchoolClass> list = new ArrayList<>(classRepository.findAll());
+        list.sort((a, b) -> {
+            int numA = extractClassNumber(a.getName());
+            int numB = extractClassNumber(b.getName());
+            if (numA != numB) {
+                return Integer.compare(numA, numB);
+            }
+            return a.getName().compareToIgnoreCase(b.getName());
+        });
+        return list;
+    }
+
+    private int extractClassNumber(String name) {
+        if (name == null) return 999;
+        String digits = name.replaceAll("\\D+", "");
+        try {
+            return digits.isEmpty() ? 999 : Integer.parseInt(digits);
+        } catch (NumberFormatException e) {
+            return 999;
+        }
     }
 
     public SchoolClass getClassById(Long id) {
