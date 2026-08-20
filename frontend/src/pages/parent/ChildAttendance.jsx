@@ -44,18 +44,18 @@ export default function ChildAttendance() {
         <button className="btn btn-secondary" onClick={() => navigate(`/parent/child/${studentId}`)}>← Back to Profile</button>
       </div>
 
-      <div className="card" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '24px' }}>
+      <div className="card" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
         <div style={{ 
-          width: '100px', height: '100px', borderRadius: '50%', 
+          width: '90px', height: '90px', borderRadius: '50%', 
           display: 'flex', justifyContent: 'center', alignItems: 'center',
           background: `conic-gradient(${numPct >= 75 ? '#10b981' : '#ef4444'} ${Math.min(100, Math.max(0, numPct))}%, #e2e8f0 0)`,
-          fontSize: '20px', fontWeight: 'bold'
+          fontSize: '18px', fontWeight: 'bold', flexShrink: 0
         }}>
-          <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#1e293b' }}>
+          <div style={{ width: '70px', height: '70px', borderRadius: '50%', background: 'var(--bg-surface)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--text-primary)' }}>
             {numPct.toFixed(0)}%
           </div>
         </div>
-        <div>
+        <div style={{ flex: '1', minWidth: '200px' }}>
           <h3 style={{ margin: '0 0 4px 0' }}>Overall Attendance Rate</h3>
           <p style={{ margin: 0, color: '#64748b', fontSize: '14px' }}>
             {numPct >= 75 ? '✅ Attendance is satisfactory and above minimum requirements.' : '⚠️ Warning: Attendance is below the required 75% threshold.'}

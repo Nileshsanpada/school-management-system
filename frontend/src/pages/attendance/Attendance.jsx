@@ -163,7 +163,7 @@ export default function Attendance() {
             </select>
           </div>
           <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button className="btn btn-primary" onClick={loadStudents} disabled={!classId || !sectionId || !date || loading}>
+            <button className="btn btn-primary" style={{ width: '100%', minHeight: '42px' }} onClick={loadStudents} disabled={!classId || !sectionId || !date || loading}>
               {loading ? 'Loading...' : '🔍 Load Students'}
             </button>
           </div>

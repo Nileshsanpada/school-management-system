@@ -72,15 +72,26 @@ export default function StudentDetails() {
         </div>
       </div>
 
-      <div style={{ display: 'flex', gap: '16px', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+      <div style={{ 
+        display: 'flex', 
+        gap: '8px', 
+        marginBottom: '20px', 
+        overflowX: 'auto', 
+        paddingBottom: '8px', 
+        WebkitOverflowScrolling: 'touch',
+        borderBottom: '1px solid var(--border-color)' 
+      }}>
         {['PROFILE', 'ATTENDANCE', 'RESULTS', 'FEES'].map(tab => (
           <button 
             key={tab} 
-            className="btn"
+            className="btn btn-sm"
             style={{ 
-              background: activeTab === tab ? 'var(--primary)' : 'transparent',
-              color: activeTab === tab ? 'white' : 'var(--text)',
-              border: activeTab === tab ? 'none' : '1px solid var(--border)'
+              background: activeTab === tab ? 'var(--primary)' : 'var(--bg-surface-elevated)',
+              color: activeTab === tab ? '#ffffff' : 'var(--text-primary)',
+              border: '1px solid ' + (activeTab === tab ? 'var(--primary)' : 'var(--border-color)'),
+              whiteSpace: 'nowrap',
+              padding: '8px 16px',
+              borderRadius: 'var(--radius-md)'
             }}
             onClick={() => setActiveTab(tab)}
           >
