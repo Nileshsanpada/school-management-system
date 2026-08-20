@@ -168,6 +168,8 @@ public class AdmissionService {
                 StudentAcademicHistory history = new StudentAcademicHistory();
                 history.setStudent(student);
                 history.setAcademicYear(activeYear);
+                history.setSchoolClass(student.getCurrentClass());
+                history.setSection(student.getCurrentSection());
                 studentAcademicHistoryRepository.save(history);
                 
                 logger.info("Successfully created student: {} and linked to parent: {}", studentId, pEmail);
