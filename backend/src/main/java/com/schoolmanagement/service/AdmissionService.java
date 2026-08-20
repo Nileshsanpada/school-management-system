@@ -110,7 +110,7 @@ public class AdmissionService {
                 student.setStatus(StudentStatus.ACTIVE);
                 student.setStudentId(studentId);
                 
-                // Get or create active academic year
+                // 1. Get or create active academic year
                 AcademicYear activeYear = academicYearRepository.findByActiveTrue()
                         .or(() -> academicYearRepository.findAll().stream().findFirst())
                         .orElseGet(() -> {
@@ -123,15 +123,24 @@ public class AdmissionService {
                         });
                 student.setCurrentAcademicYear(activeYear);
                 
-                // Default class assignment if available
-                SchoolClass defaultClass = classRepository.findAll().stream().findFirst().orElse(null);
-                if (defaultClass != null) {
-                    student.setCurrentClass(defaultClass);
-                    Section defaultSection = sectionRepository.findBySchoolClassId(defaultClass.getId()).stream().findFirst().orElse(null);
-                    student.setCurrentSection(defaultSection);
-                }
+                // 2. Guaranteed non-null Default Class and Section
+                SchoolClass defaultClass = classRepository.findAll().stream().findFirst().orElseGet(() -> {
+                    SchoolClass sc = new SchoolClass();
+                    sc.setName("Class 10");
+                    return classRepository.save(sc);
+                });
+                student.setCurrentClass(defaultClass);
                 
-                // Parent mapping
+                Section defaultSection = sectionRepository.findBySchoolClassId(defaultClass.getId()).stream().findFirst().orElseGet(() -> {
+                    Section sec = new Section();
+                    sec.setName("A");
+                    sec.setSchoolClass(defaultClass);
+                    sec.setAcademicYear(activeYear);
+                    return sectionRepository.save(sec);
+                });
+                student.setCurrentSection(defaultSection);
+                
+                // 3. Parent mapping & auto-link
                 final String pEmail = (admission.getParentEmail() != null && !admission.getParentEmail().isBlank()) 
                         ? admission.getParentEmail().trim().toLowerCase() 
                         : ("parent." + studentId.toLowerCase().replace("-", "") + "@school.com");
@@ -165,11 +174,12 @@ public class AdmissionService {
                 student.setParent(parent);
                 student = studentRepository.save(student);
                 
+                // 4. Save Academic History record with guaranteed non-null Class & Academic Year
                 StudentAcademicHistory history = new StudentAcademicHistory();
                 history.setStudent(student);
                 history.setAcademicYear(activeYear);
-                history.setSchoolClass(student.getCurrentClass());
-                history.setSection(student.getCurrentSection());
+                history.setSchoolClass(defaultClass);
+                history.setSection(defaultSection);
                 studentAcademicHistoryRepository.save(history);
                 
                 logger.info("Successfully created student: {} and linked to parent: {}", studentId, pEmail);
