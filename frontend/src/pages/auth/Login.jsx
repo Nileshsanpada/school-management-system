@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import authService from '../../services/authService'
 import { useAuth } from '../../hooks/useAuth'
@@ -11,9 +11,24 @@ export default function Login() {
   const [touched, setTouched] = useState({ email: false, password: false })
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [loadingSeconds, setLoadingSeconds] = useState(0)
   const { login } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
+
+  // Track loading seconds for Render Cold Start indicator
+  useEffect(() => {
+    let interval
+    if (loading) {
+      setLoadingSeconds(0)
+      interval = setInterval(() => {
+        setLoadingSeconds(prev => prev + 1)
+      }, 1000)
+    } else {
+      setLoadingSeconds(0)
+    }
+    return () => clearInterval(interval)
+  }, [loading])
 
   // Real-time Email validation check
   const isEmailValid = useMemo(() => {
@@ -102,6 +117,29 @@ export default function Login() {
 
         {error && <ErrorMessage message={error} />}
 
+        {loading && loadingSeconds >= 2 && (
+          <div style={{
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            border: '1px solid rgba(59, 130, 246, 0.3)',
+            borderRadius: 'var(--radius-md)',
+            padding: '12px 14px',
+            marginBottom: '16px',
+            fontSize: '13px',
+            color: 'var(--primary)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
+            <div className="spinner" style={{ width: '18px', height: '18px', borderWidth: '2px' }} />
+            <div>
+              <strong>Cloud Server Waking Up ({loadingSeconds}s)...</strong>
+              <div style={{ fontSize: '11.5px', opacity: 0.85, marginTop: '2px' }}>
+                Free-tier cold start in progress. Logging in momentarily!
+              </div>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email Address</label>
@@ -151,7 +189,7 @@ export default function Login() {
             disabled={loading}
             style={{ width: '100%', padding: '12px', fontSize: '15px', marginTop: '6px' }}
           >
-            {loading ? 'Signing In...' : 'Sign In'}
+            {loading ? (loadingSeconds > 2 ? `Waking Server (${loadingSeconds}s)...` : 'Signing In...') : 'Sign In'}
           </button>
         </form>
 
