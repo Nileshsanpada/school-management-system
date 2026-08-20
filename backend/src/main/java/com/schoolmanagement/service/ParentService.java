@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,10 +37,12 @@ public class ParentService {
     }
 
     public ParentResponse getParentByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found for ID: " + userId));
+
         Parent parent = parentRepository.findByUserId(userId)
+                .or(() -> parentRepository.findByEmail(user.getEmail()))
                 .orElseGet(() -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new RuntimeException("User not found for ID: " + userId));
                     Parent newParent = new Parent();
                     newParent.setName(user.getName());
                     newParent.setEmail(user.getEmail());
@@ -46,9 +50,20 @@ public class ParentService {
                     return parentRepository.save(newParent);
                 });
 
-        List<StudentResponse> children = studentRepository.findByParentId(parent.getId()).stream()
-                .map(studentMapper::toResponse)
-                .collect(Collectors.toList());
+        // Ensure parent has user linked
+        if (parent.getUser() == null) {
+            parent.setUser(user);
+            parentRepository.save(parent);
+        }
+
+        List<StudentResponse> children;
+        if (parent.getId() != null) {
+            children = studentRepository.findByParentId(parent.getId()).stream()
+                    .map(studentMapper::toResponse)
+                    .collect(Collectors.toList());
+        } else {
+            children = Collections.emptyList();
+        }
 
         return ParentResponse.builder()
                 .id(parent.getId())
@@ -61,10 +76,15 @@ public class ParentService {
     }
 
     public void verifyParentOwnership(Long userId, Long studentId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found for ID: " + userId));
+
         Parent parent = parentRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Parent not found"));
+                .or(() -> parentRepository.findByEmail(user.getEmail()))
+                .orElseThrow(() -> new RuntimeException("Parent record not found for user: " + userId));
+
         Student student = studentRepository.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found for ID: " + studentId));
 
         if (student.getParent() == null || !student.getParent().getId().equals(parent.getId())) {
             throw new AccessDeniedException("You are not authorized to access this student's information");
