@@ -57,7 +57,7 @@ export default function ParentDashboard() {
               <div style={{ 
                 background: 'var(--bg-surface-elevated)', 
                 padding: '14px', 
-                borderRadius: 'var(--radius-md)',
+                borderRadius: 'var(--radius-md)', 
                 border: '1px solid var(--border-color)',
                 display: 'grid',
                 gridTemplateColumns: 'repeat(2, 1fr)',
@@ -87,37 +87,50 @@ export default function ParentDashboard() {
           ))}
         </div>
       ) : (
-        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', maxWidth: '600px', margin: '0 auto' }}>
+        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', maxWidth: '650px', margin: '0 auto' }}>
           <div style={{ fontSize: '48px', marginBottom: '14px' }}>👨‍👩‍👧</div>
-          <h3 style={{ fontSize: '19px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
-            No Students Linked Yet
+          <h3 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            No Students Linked to Your Email Yet
           </h3>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', marginBottom: '24px' }}>
-            Your parent account has been successfully created. The school administration will map your registered child (student ID) to your profile.
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.6', marginBottom: '24px' }}>
+            Aapka Parent Account successfully ban gaya hai! Abhi tak School Administration ne aapke Email (<strong>{profile.email}</strong>) se koi Student link nahi kiya hai.
           </p>
 
-          <div style={{ 
-            backgroundColor: 'var(--bg-surface-elevated)', 
-            border: '1px dashed var(--primary)', 
-            borderRadius: 'var(--radius-md)', 
-            padding: '16px',
-            marginBottom: '20px'
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '12px',
+            marginBottom: '24px',
+            textAlign: 'left',
+            background: 'var(--bg-surface-elevated)',
+            padding: '16px 20px',
+            borderRadius: 'var(--radius-md)',
+            border: '1px solid var(--border-color)',
+            fontSize: '13.5px'
           }}>
-            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '6px' }}>
-              💡 Demo Exploration Notice
-            </div>
-            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
-              To test the Attendance %, Exam Results & Fee Ledger right now, you can explore the demo student (Aarav Sharma) or log in as the demo parent:
-            </div>
-            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button 
-                type="button"
-                className="btn btn-primary btn-sm"
-                onClick={() => navigate('/parent/child/1')}
-              >
-                🎓 View Demo Student (Aarav Sharma)
-              </button>
-            </div>
+            <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>📋 Next Steps (Admission Process):</div>
+            <div><strong>1. Submit Admission Form:</strong> Neeche diye button se apne bachhe ka Admission Form submit karein.</div>
+            <div><strong>2. School Review & Confirmation:</strong> School Admin form review karke jaise hi <em>"Confirm Admission"</em> karega, bachhe ka <strong>Student ID</strong> generate ho jayega.</div>
+            <div><strong>3. Auto-Link:</strong> Bachha automatically aapke dashboard me show hone lagega!</div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <button 
+              type="button"
+              className="btn btn-primary"
+              style={{ padding: '10px 20px', fontSize: '14px' }}
+              onClick={() => navigate('/admissions/new')}
+            >
+              📝 Apply for Child Admission
+            </button>
+            <button 
+              type="button"
+              className="btn btn-secondary"
+              style={{ padding: '10px 20px', fontSize: '14px' }}
+              onClick={() => navigate('/parent/child/1')}
+            >
+              🎓 Explore Demo Child (Aarav Sharma)
+            </button>
           </div>
         </div>
       )}
