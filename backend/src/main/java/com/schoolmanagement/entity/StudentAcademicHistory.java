@@ -19,11 +19,11 @@ public class StudentAcademicHistory {
     private Student student;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "academic_year_id", nullable = false)
+    @JoinColumn(name = "academic_year_id")
     private AcademicYear academicYear;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "class_id", nullable = false)
+    @JoinColumn(name = "class_id")
     private SchoolClass schoolClass;
 
     @ManyToOne(fetch = FetchType.LAZY)
