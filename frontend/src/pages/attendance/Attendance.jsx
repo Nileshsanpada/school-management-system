@@ -7,6 +7,8 @@ import Loading from '../../components/Loading'
 import ErrorMessage from '../../components/ErrorMessage'
 
 export default function Attendance() {
+  const [academicYears, setAcademicYears] = useState([])
+  const [academicYearId, setAcademicYearId] = useState('')
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
   const [classId, setClassId] = useState('')
   const [sectionId, setSectionId] = useState('')
@@ -33,9 +35,20 @@ export default function Attendance() {
   }
 
   useEffect(() => {
-    academicService.classes.getAll()
-      .then(res => setClasses(sortClasses(res.data || [])))
-      .catch(() => setError('Failed to load classes'))
+    Promise.all([
+      academicService.academicYears.getAll(),
+      academicService.classes.getAll()
+    ])
+      .then(([yRes, cRes]) => {
+        const yList = yRes.data || []
+        setAcademicYears(yList)
+        const activeY = yList.find(y => y.active) || yList[0]
+        if (activeY) {
+          setAcademicYearId(activeY.id)
+        }
+        setClasses(sortClasses(cRes.data || []))
+      })
+      .catch(() => setError('Failed to load initial data'))
       .finally(() => setLoading(false))
   }, [])
 
@@ -158,17 +171,29 @@ export default function Attendance() {
         <div>
           <h1>📋 Daily Attendance Management</h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
-            Select date, class and section to mark or modify student attendance records
+            Select academic year, date, class and section to mark or modify student attendance records
           </p>
         </div>
       </div>
 
       <div className="card" style={{ marginBottom: '24px' }}>
-        <div className="form-row">
+        <div className="form-row" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))' }}>
+          <div className="form-group">
+            <label>Academic Year</label>
+            <select value={academicYearId} onChange={e => setAcademicYearId(e.target.value)}>
+              {academicYears.map(y => (
+                <option key={y.id} value={y.id}>
+                  {y.name} {y.active ? '(Active)' : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
           <div className="form-group">
             <label>Attendance Date</label>
             <input type="date" value={date} onChange={e => setDate(e.target.value)} required />
           </div>
+
           <div className="form-group">
             <label>Class (1 to 12)</label>
             <select value={classId} onChange={handleClassChange}>
@@ -176,6 +201,7 @@ export default function Attendance() {
               {classes.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           </div>
+
           <div className="form-group">
             <label>Section</label>
             <select value={sectionId} onChange={e => setSectionId(e.target.value)} disabled={!classId}>
@@ -183,6 +209,7 @@ export default function Attendance() {
               {sections.map(s => <option key={s.id} value={s.id}>Section {s.name}</option>)}
             </select>
           </div>
+
           <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
             <button 
               className="btn btn-primary" 
