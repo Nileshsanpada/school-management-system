@@ -38,6 +38,11 @@ public class AttendanceService {
     }
 
     @Transactional
+    public AttendanceResponse markAttendance(AttendanceRequest request) {
+        return markOrUpdateAttendance(request);
+    }
+
+    @Transactional
     public AttendanceResponse markOrUpdateAttendance(AttendanceRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));

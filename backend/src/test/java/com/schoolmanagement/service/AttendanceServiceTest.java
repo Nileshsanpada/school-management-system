@@ -63,7 +63,7 @@ class AttendanceServiceTest {
         attendance.setStatus(AttendanceStatus.PRESENT);
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
-        when(attendanceRepository.existsByStudentIdAndAttendanceDate(studentId, date)).thenReturn(false);
+        when(attendanceRepository.findByStudentIdAndAttendanceDate(studentId, date)).thenReturn(Optional.empty());
         when(attendanceRepository.save(any(Attendance.class))).thenReturn(attendance);
 
         AttendanceResponse result = attendanceService.markAttendance(request);
@@ -74,23 +74,43 @@ class AttendanceServiceTest {
     }
 
     @Test
-    void markAttendance_shouldThrowException_whenDuplicate() {
+    void markAttendance_shouldUpdateAttendance_whenExisting() {
         Long studentId = 1L;
         LocalDate date = LocalDate.now();
         
         AttendanceRequest request = new AttendanceRequest();
         request.setStudentId(studentId);
         request.setAttendanceDate(date);
-        request.setStatus("PRESENT");
+        request.setStatus("LATE");
+        request.setRemarks("Traffic");
 
         Student student = new Student();
         student.setId(studentId);
+        student.setFirstName("John");
+        student.setLastName("Doe");
+
+        Attendance existingAttendance = new Attendance();
+        existingAttendance.setId(1L);
+        existingAttendance.setStudent(student);
+        existingAttendance.setAttendanceDate(date);
+        existingAttendance.setStatus(AttendanceStatus.PRESENT);
+
+        Attendance updatedAttendance = new Attendance();
+        updatedAttendance.setId(1L);
+        updatedAttendance.setStudent(student);
+        updatedAttendance.setAttendanceDate(date);
+        updatedAttendance.setStatus(AttendanceStatus.LATE);
+        updatedAttendance.setRemarks("Traffic");
 
         when(studentRepository.findById(studentId)).thenReturn(Optional.of(student));
-        when(attendanceRepository.existsByStudentIdAndAttendanceDate(studentId, date)).thenReturn(true);
+        when(attendanceRepository.findByStudentIdAndAttendanceDate(studentId, date)).thenReturn(Optional.of(existingAttendance));
+        when(attendanceRepository.save(any(Attendance.class))).thenReturn(updatedAttendance);
 
-        assertThrows(RuntimeException.class, () -> attendanceService.markAttendance(request));
-        verify(attendanceRepository, never()).save(any(Attendance.class));
+        AttendanceResponse result = attendanceService.markAttendance(request);
+
+        assertNotNull(result);
+        assertEquals("LATE", result.getStatus());
+        verify(attendanceRepository, times(1)).save(any(Attendance.class));
     }
 
     @Test
