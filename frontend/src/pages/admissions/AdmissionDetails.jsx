@@ -11,13 +11,14 @@ export default function AdmissionDetails() {
   const [admission, setAdmission] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const fetchAdmission = async () => {
     try {
       const res = await admissionService.getById(id)
       setAdmission(res.data)
     } catch (err) {
-      setError('Failed to load admission')
+      setError('Failed to load admission application')
     } finally {
       setLoading(false)
     }
@@ -30,46 +31,52 @@ export default function AdmissionDetails() {
       if (!window.confirm(`Are you sure you want to mark this application as ${newStatus}?`)) return
     }
     
+    setError('')
+    setSuccess('')
     try {
       await admissionService.updateStatus(id, newStatus)
+      setSuccess(`Application status successfully updated to ${newStatus}!`)
       fetchAdmission()
     } catch (err) {
-      setError('Failed to update status')
+      setError(err.response?.data?.message || 'Failed to update admission status')
     }
   }
 
   if (loading) return <Loading />
-  if (error) return <ErrorMessage message={error} />
-  if (!admission) return <div>Not found</div>
+  if (error && !admission) return <ErrorMessage message={error} />
+  if (!admission) return <div>Admission application not found</div>
 
   const isFinalStatus = ['CONFIRMED', 'REJECTED'].includes(admission.status)
 
   return (
     <div>
       <div className="page-header">
-        <h1>Admission Application</h1>
-        <button className="btn" onClick={() => navigate('/admissions')}>Back</button>
+        <h1>Admission Application Details</h1>
+        <button className="btn" onClick={() => navigate('/admissions')}>← Back to List</button>
       </div>
 
+      {error && <ErrorMessage message={error} />}
+      {success && <div className="status-badge active" style={{ padding: '12px', marginBottom: '16px', display: 'block' }}>{success}</div>}
+
       <div className="card" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h2>{admission.studentName}</h2>
-          <span className={`status-badge ${admission.status}`} style={{ fontSize: '14px', padding: '6px 12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h2 style={{ margin: 0 }}>{admission.studentName}</h2>
+          <span className={`status-badge ${admission.status}`} style={{ fontSize: '14px', padding: '6px 14px' }}>
             {admission.status}
           </span>
         </div>
         
         <div className="form-row">
           <div>
-            <p><strong>App Number:</strong> {admission.applicationNumber}</p>
-            <p><strong>DOB:</strong> {formatDate(admission.dateOfBirth)}</p>
+            <p><strong>Application Number:</strong> {admission.applicationNumber}</p>
+            <p><strong>Date of Birth:</strong> {formatDate(admission.dateOfBirth)}</p>
             <p><strong>Gender:</strong> {admission.gender}</p>
             <p><strong>Previous School:</strong> {admission.previousSchool || '-'}</p>
           </div>
           <div>
-            <p><strong>Parent Name:</strong> {admission.parentName}</p>
-            <p><strong>Email:</strong> {admission.parentEmail}</p>
-            <p><strong>Phone:</strong> {admission.parentPhone}</p>
+            <p><strong>Parent / Guardian Name:</strong> {admission.parentName}</p>
+            <p><strong>Parent Email:</strong> {admission.parentEmail}</p>
+            <p><strong>Parent Phone:</strong> {admission.parentPhone}</p>
             <p><strong>Applied On:</strong> {formatDate(admission.applicationDate)}</p>
           </div>
         </div>
@@ -77,16 +84,27 @@ export default function AdmissionDetails() {
 
       {!isFinalStatus && (
         <div className="card">
-          <h3 style={{ marginBottom: '16px' }}>Update Status</h3>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            {admission.status === 'PENDING' && (
-              <button className="btn btn-primary" onClick={() => handleStatusChange('UNDER_REVIEW')}>Mark Under Review</button>
+          <h3 style={{ marginBottom: '16px' }}>Application Workflow Actions</h3>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            {admission.status === 'NEW' && (
+              <button className="btn btn-secondary" onClick={() => handleStatusChange('CONTACTED')}>
+                Mark Contacted
+              </button>
+            )}
+            {['NEW', 'CONTACTED'].includes(admission.status) && (
+              <button className="btn btn-primary" onClick={() => handleStatusChange('INTERVIEW_SCHEDULED')}>
+                Schedule Interview
+              </button>
             )}
             {admission.status !== 'CONFIRMED' && (
-              <button className="btn btn-success" onClick={() => handleStatusChange('CONFIRMED')}>Confirm Admission</button>
+              <button className="btn btn-primary" style={{ backgroundColor: 'var(--success)' }} onClick={() => handleStatusChange('CONFIRMED')}>
+                ✓ Confirm Admission & Generate Student ID
+              </button>
             )}
             {admission.status !== 'REJECTED' && (
-              <button className="btn btn-danger" onClick={() => handleStatusChange('REJECTED')}>Reject Application</button>
+              <button className="btn btn-danger" onClick={() => handleStatusChange('REJECTED')}>
+                ✕ Reject Application
+              </button>
             )}
           </div>
         </div>
