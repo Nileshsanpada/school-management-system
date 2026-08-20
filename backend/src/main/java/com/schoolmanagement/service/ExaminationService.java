@@ -11,11 +11,13 @@ import com.schoolmanagement.repository.ExaminationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ExaminationService {
 
     private static final Logger logger = LoggerFactory.getLogger(ExaminationService.class);
@@ -39,6 +41,7 @@ public class ExaminationService {
         return mapToResponse(examination);
     }
 
+    @Transactional
     public ExaminationResponse createExamination(ExaminationRequest request) {
         AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElseThrow(() -> new RuntimeException("Academic Year not found"));
         SchoolClass schoolClass = classRepository.findById(request.getClassId()).orElseThrow(() -> new RuntimeException("Class not found"));
@@ -61,12 +64,14 @@ public class ExaminationService {
     }
 
     private ExaminationResponse mapToResponse(Examination examination) {
+        String academicYearName = examination.getAcademicYear() != null ? examination.getAcademicYear().getName() : "";
+        String className = examination.getSchoolClass() != null ? examination.getSchoolClass().getName() : "";
         return ExaminationResponse.builder()
                 .id(examination.getId())
                 .name(examination.getName())
                 .examDate(examination.getExamDate())
-                .academicYearName(examination.getAcademicYear().getName())
-                .className(examination.getSchoolClass().getName())
+                .academicYearName(academicYearName)
+                .className(className)
                 .build();
     }
 }

@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.HashMap;
@@ -19,6 +20,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class AttendanceService {
 
     private static final Logger logger = LoggerFactory.getLogger(AttendanceService.class);
@@ -34,6 +36,7 @@ public class AttendanceService {
         this.studentRepository = studentRepository;
     }
 
+    @Transactional
     public AttendanceResponse markAttendance(AttendanceRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
                 .orElseThrow(() -> new RuntimeException("Student not found"));
@@ -100,12 +103,18 @@ public class AttendanceService {
     }
 
     private AttendanceResponse mapToResponse(Attendance attendance) {
+        String studentName = "";
+        Long studentId = null;
+        if (attendance.getStudent() != null) {
+            studentId = attendance.getStudent().getId();
+            studentName = attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName();
+        }
         return AttendanceResponse.builder()
                 .id(attendance.getId())
-                .studentId(attendance.getStudent().getId())
-                .studentName(attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName())
+                .studentId(studentId)
+                .studentName(studentName)
                 .attendanceDate(attendance.getAttendanceDate())
-                .status(attendance.getStatus().name())
+                .status(attendance.getStatus() != null ? attendance.getStatus().name() : null)
                 .remarks(attendance.getRemarks())
                 .build();
     }

@@ -19,6 +19,11 @@ public class PaymentController {
         this.paymentService = paymentService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<PaymentResponse>> getAll() {
+        return ResponseEntity.ok(paymentService.getAllPayments());
+    }
+
     @PostMapping
     public ResponseEntity<PaymentResponse> create(@Valid @RequestBody PaymentRequest request) {
         return ResponseEntity.ok(paymentService.createPayment(request));

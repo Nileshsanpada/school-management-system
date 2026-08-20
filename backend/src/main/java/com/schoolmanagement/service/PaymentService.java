@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class PaymentService {
 
     private static final Logger logger = LoggerFactory.getLogger(PaymentService.class);
@@ -28,6 +29,10 @@ public class PaymentService {
     public PaymentService(PaymentRepository paymentRepository, FeeRepository feeRepository) {
         this.paymentRepository = paymentRepository;
         this.feeRepository = feeRepository;
+    }
+
+    public List<PaymentResponse> getAllPayments() {
+        return paymentRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
     }
 
     @Transactional
@@ -79,12 +84,13 @@ public class PaymentService {
     }
 
     private PaymentResponse mapToResponse(Payment payment) {
+        Long feeId = payment.getFee() != null ? payment.getFee().getId() : null;
         return PaymentResponse.builder()
                 .id(payment.getId())
-                .feeId(payment.getFee().getId())
-                .amount(payment.getAmount())
+                .feeId(feeId)
+                .amount(payment.getAmount() != null ? payment.getAmount() : 0.0)
                 .paymentDate(payment.getPaymentDate())
-                .paymentMethod(payment.getPaymentMethod().name())
+                .paymentMethod(payment.getPaymentMethod() != null ? payment.getPaymentMethod().name() : "CASH")
                 .transactionReference(payment.getTransactionReference())
                 .build();
     }

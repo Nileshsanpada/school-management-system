@@ -12,11 +12,13 @@ import com.schoolmanagement.repository.StudentRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class FeeService {
 
     private static final Logger logger = LoggerFactory.getLogger(FeeService.class);
@@ -31,6 +33,11 @@ public class FeeService {
         this.academicYearRepository = academicYearRepository;
     }
 
+    public List<FeeResponse> getAllFees() {
+        return feeRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
     public FeeResponse createFee(FeeRequest request) {
         Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found"));
         AcademicYear academicYear = academicYearRepository.findById(request.getAcademicYearId()).orElseThrow(() -> new RuntimeException("Academic Year not found"));
@@ -62,15 +69,19 @@ public class FeeService {
     }
 
     private FeeResponse mapToResponse(Fee fee) {
+        String studentName = fee.getStudent() != null ? fee.getStudent().getFirstName() + " " + fee.getStudent().getLastName() : "";
+        Long studentId = fee.getStudent() != null ? fee.getStudent().getId() : null;
+        String yearName = fee.getAcademicYear() != null ? fee.getAcademicYear().getName() : "";
+
         return FeeResponse.builder()
                 .id(fee.getId())
-                .studentId(fee.getStudent().getId())
-                .studentName(fee.getStudent().getFirstName() + " " + fee.getStudent().getLastName())
-                .academicYearName(fee.getAcademicYear().getName())
-                .totalAmount(fee.getTotalAmount())
-                .amountPaid(fee.getAmountPaid())
-                .outstandingAmount(fee.getOutstandingAmount())
-                .status(fee.getStatus().name())
+                .studentId(studentId)
+                .studentName(studentName)
+                .academicYearName(yearName)
+                .totalAmount(fee.getTotalAmount() != null ? fee.getTotalAmount() : 0.0)
+                .amountPaid(fee.getAmountPaid() != null ? fee.getAmountPaid() : 0.0)
+                .outstandingAmount(fee.getOutstandingAmount() != null ? fee.getOutstandingAmount() : 0.0)
+                .status(fee.getStatus() != null ? fee.getStatus().name() : "PENDING")
                 .dueDate(fee.getDueDate())
                 .build();
     }

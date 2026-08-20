@@ -6,10 +6,11 @@ export default function FeeTable({ fees }) {
   }
   
   return (
-    <div className="card" style={{ overflowX: 'auto' }}>
-      <table>
+    <div className="card table-container" style={{ overflowX: 'auto' }}>
+      <table style={{ width: '100%', borderCollapse: 'collapse' }}>
         <thead>
           <tr>
+            <th>Student</th>
             <th>Academic Year</th>
             <th>Total Amount</th>
             <th>Paid</th>
@@ -24,6 +25,9 @@ export default function FeeTable({ fees }) {
             const outstanding = fee.outstandingAmount ?? (fee.totalAmount - paid)
             return (
               <tr key={fee.id}>
+                <td>
+                  <strong>{fee.studentName || `Student #${fee.studentId || '-'}`}</strong>
+                </td>
                 <td>{fee.academicYearName || '-'}</td>
                 <td>₹{(fee.totalAmount || 0).toLocaleString('en-IN')}</td>
                 <td>₹{paid.toLocaleString('en-IN')}</td>

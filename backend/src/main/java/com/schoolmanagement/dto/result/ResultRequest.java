@@ -1,5 +1,6 @@
 package com.schoolmanagement.dto.result;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
@@ -15,13 +16,18 @@ import lombok.Setter;
 public class ResultRequest {
     @NotNull
     private Long studentId;
+
     @NotNull
+    @JsonAlias({"examId", "examinationId"})
     private Long examinationId;
+
     @NotNull
     private Long subjectId;
+
     @NotNull
     @PositiveOrZero
     private Double marksObtained;
+
     @NotNull
     @Positive
     private Double maximumMarks;

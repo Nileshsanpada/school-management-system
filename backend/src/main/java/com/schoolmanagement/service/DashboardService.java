@@ -8,12 +8,14 @@ import com.schoolmanagement.repository.FeeRepository;
 import com.schoolmanagement.repository.StudentRepository;
 import com.schoolmanagement.repository.TeacherRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
 
 @Service
+@Transactional(readOnly = true)
 public class DashboardService {
 
     private final StudentRepository studentRepository;

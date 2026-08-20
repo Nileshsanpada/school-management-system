@@ -100,7 +100,7 @@ export default function Payments() {
               <label>Student</label>
               <select value={studentId} onChange={handleStudentChange} required>
                 <option value="">Select Student</option>
-                {students?.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
+                {students?.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName} ({s.studentId})</option>)}
               </select>
             </div>
           </div>
@@ -109,17 +109,20 @@ export default function Payments() {
             <label>Select Fee</label>
             <select value={feeId} onChange={e => setFeeId(e.target.value)} required disabled={!studentId}>
               <option value="">Select Unpaid Fee</option>
-              {fees?.map(f => (
-                <option key={f.id} value={f.id}>
-                  {f.academicYearName} - Balance: ${f.totalAmount - f.paidAmount} (Total: ${f.totalAmount})
-                </option>
-              ))}
+              {fees?.map(f => {
+                const outstanding = f.outstandingAmount ?? (f.totalAmount - (f.amountPaid || 0))
+                return (
+                  <option key={f.id} value={f.id}>
+                    {f.academicYearName} - Outstanding: ₹{outstanding.toLocaleString('en-IN')} (Total: ₹{f.totalAmount?.toLocaleString('en-IN')})
+                  </option>
+                )
+              })}
             </select>
           </div>
           
           <div className="form-row">
             <div className="form-group">
-              <label>Amount</label>
+              <label>Amount (₹)</label>
               <input type="number" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} required />
             </div>
             <div className="form-group">
@@ -135,7 +138,7 @@ export default function Payments() {
           
           <div className="form-group">
             <label>Transaction Reference (Optional)</label>
-            <input type="text" value={transactionReference} onChange={e => setTransactionReference(e.target.value)} />
+            <input type="text" placeholder="e.g. UPI Ref / Cheque No" value={transactionReference} onChange={e => setTransactionReference(e.target.value)} />
           </div>
           
           <button type="submit" className="btn btn-primary" disabled={!feeId || !amount}>Record Payment</button>
@@ -143,7 +146,7 @@ export default function Payments() {
       </div>
 
       {studentId && payments.length > 0 && (
-        <div className="card" style={{ overflowX: 'auto' }}>
+        <div className="card table-container" style={{ overflowX: 'auto' }}>
           <h3 style={{ marginBottom: '16px' }}>Payment History</h3>
           <table>
             <thead>
@@ -158,8 +161,8 @@ export default function Payments() {
               {payments.map(p => (
                 <tr key={p.id}>
                   <td>{formatDate(p.paymentDate)}</td>
-                  <td>${p.amount}</td>
-                  <td>{p.paymentMethod}</td>
+                  <td>₹{(p.amount || 0).toLocaleString('en-IN')}</td>
+                  <td><span className="status-badge active">{p.paymentMethod}</span></td>
                   <td>{p.transactionReference || '-'}</td>
                 </tr>
               ))}

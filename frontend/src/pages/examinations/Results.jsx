@@ -58,12 +58,13 @@ export default function Results() {
     setSuccess('')
     try {
       await resultService.create({
-        studentId, examId, subjectId, 
+        studentId: Number(studentId),
+        examinationId: Number(examId),
+        subjectId: Number(subjectId), 
         marksObtained: Number(marksObtained), 
         maximumMarks: Number(maximumMarks)
       })
-      setSuccess('Result added successfully')
-      setSubjectId('')
+      setSuccess('Result recorded successfully!')
       setMarksObtained('')
       loadResults()
     } catch (err) {
@@ -76,11 +77,11 @@ export default function Results() {
   return (
     <div>
       <div className="page-header">
-        <h1>Results Entry</h1>
+        <h1>Results & Marks Entry</h1>
       </div>
 
       <div className="card" style={{ marginBottom: '24px' }}>
-        <h3>Enter Marks</h3>
+        <h3>Enter Student Marks</h3>
         <ErrorMessage message={error} />
         {success && <div className="status-badge active" style={{ padding: '12px', marginBottom: '16px', display: 'block' }}>{success}</div>}
         
@@ -114,7 +115,7 @@ export default function Results() {
               <label>Subject</label>
               <select value={subjectId} onChange={e => setSubjectId(e.target.value)} required>
                 <option value="">Select Subject</option>
-                {subjects?.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                {subjects?.map(s => <option key={s.id} value={s.id}>{s.name} ({s.code || ''})</option>)}
               </select>
             </div>
           </div>
@@ -122,15 +123,17 @@ export default function Results() {
           <div className="form-row">
             <div className="form-group">
               <label>Marks Obtained</label>
-              <input type="number" step="0.01" value={marksObtained} onChange={e => setMarksObtained(e.target.value)} required />
+              <input type="number" step="0.01" value={marksObtained} onChange={e => setMarksObtained(e.target.value)} required placeholder="e.g. 85" />
             </div>
             <div className="form-group">
               <label>Maximum Marks</label>
-              <input type="number" step="0.01" value={maximumMarks} onChange={e => setMaximumMarks(e.target.value)} required />
+              <input type="number" step="0.01" value={maximumMarks} onChange={e => setMaximumMarks(e.target.value)} required placeholder="e.g. 100" />
             </div>
           </div>
           
-          <button type="submit" className="btn btn-primary" disabled={!examId || !studentId || !subjectId}>Add Result</button>
+          <button type="submit" className="btn btn-primary" disabled={!examId || !studentId || !subjectId}>
+            Save Result
+          </button>
         </form>
       </div>
 

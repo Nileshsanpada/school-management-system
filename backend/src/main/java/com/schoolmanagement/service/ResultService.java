@@ -13,11 +13,13 @@ import com.schoolmanagement.repository.SubjectRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class ResultService {
 
     private static final Logger logger = LoggerFactory.getLogger(ResultService.class);
@@ -34,6 +36,11 @@ public class ResultService {
         this.subjectRepository = subjectRepository;
     }
 
+    public List<ResultResponse> getAllResults() {
+        return resultRepository.findAll().stream().map(this::mapToResponse).collect(Collectors.toList());
+    }
+
+    @Transactional
     public ResultResponse createResult(ResultRequest request) {
         Student student = studentRepository.findById(request.getStudentId()).orElseThrow(() -> new RuntimeException("Student not found"));
         Examination examination = examinationRepository.findById(request.getExaminationId()).orElseThrow(() -> new RuntimeException("Examination not found"));
@@ -72,7 +79,7 @@ public class ResultService {
     }
 
     private String calculateGrade(double marks, double maxMarks) {
-        double percentage = (marks / maxMarks) * 100;
+        double percentage = maxMarks > 0 ? (marks / maxMarks) * 100 : 0;
         if (percentage >= 90) return "A+";
         if (percentage >= 80) return "A";
         if (percentage >= 70) return "B";
@@ -82,17 +89,25 @@ public class ResultService {
     }
 
     private ResultResponse mapToResponse(Result result) {
-        double percentage = (result.getMarksObtained() / result.getMaximumMarks()) * 100;
+        double maxMarks = result.getMaximumMarks() != null ? result.getMaximumMarks() : 100.0;
+        double marks = result.getMarksObtained() != null ? result.getMarksObtained() : 0.0;
+        double percentage = maxMarks > 0 ? (marks / maxMarks) * 100 : 0;
+        
+        String studentName = result.getStudent() != null ? result.getStudent().getFirstName() + " " + result.getStudent().getLastName() : "";
+        Long studentId = result.getStudent() != null ? result.getStudent().getId() : null;
+        String examName = result.getExamination() != null ? result.getExamination().getName() : "";
+        String subjectName = result.getSubject() != null ? result.getSubject().getName() : "";
+
         return ResultResponse.builder()
                 .id(result.getId())
-                .studentId(result.getStudent().getId())
-                .studentName(result.getStudent().getFirstName() + " " + result.getStudent().getLastName())
-                .examinationName(result.getExamination().getName())
-                .subjectName(result.getSubject().getName())
-                .marksObtained(result.getMarksObtained())
-                .maximumMarks(result.getMaximumMarks())
+                .studentId(studentId)
+                .studentName(studentName)
+                .examinationName(examName)
+                .subjectName(subjectName)
+                .marksObtained(marks)
+                .maximumMarks(maxMarks)
                 .percentage(Math.round(percentage * 100.0) / 100.0)
-                .grade(result.getGrade())
+                .grade(result.getGrade() != null ? result.getGrade() : "-")
                 .build();
     }
 }

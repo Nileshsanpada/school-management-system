@@ -8,11 +8,13 @@ import com.schoolmanagement.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Service
+@Transactional(readOnly = true)
 public class StudentService {
 
     private static final Logger logger = LoggerFactory.getLogger(StudentService.class);
@@ -41,14 +43,15 @@ public class StudentService {
 
     public StudentResponse getStudentById(Long id) {
         return studentRepository.findById(id).map(studentMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found for ID: " + id));
     }
 
     public StudentResponse getStudentByStudentId(String studentId) {
         return studentRepository.findByStudentId(studentId).map(studentMapper::toResponse)
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found for Student ID: " + studentId));
     }
 
+    @Transactional
     public StudentResponse updateStudent(Long id, StudentRequest request) {
         Student student = studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
         student.setFirstName(request.getFirstName());
@@ -72,6 +75,7 @@ public class StudentService {
         return studentMapper.toResponse(student);
     }
 
+    @Transactional
     public void deleteStudent(Long id) {
         studentRepository.deleteById(id);
     }

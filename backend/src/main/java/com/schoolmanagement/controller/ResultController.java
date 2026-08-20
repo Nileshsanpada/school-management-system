@@ -19,6 +19,11 @@ public class ResultController {
         this.resultService = resultService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<ResultResponse>> getAll() {
+        return ResponseEntity.ok(resultService.getAllResults());
+    }
+
     @PostMapping
     public ResponseEntity<ResultResponse> create(@Valid @RequestBody ResultRequest request) {
         return ResponseEntity.ok(resultService.createResult(request));

@@ -19,6 +19,11 @@ public class FeeController {
         this.feeService = feeService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<FeeResponse>> getAll() {
+        return ResponseEntity.ok(feeService.getAllFees());
+    }
+
     @PostMapping
     public ResponseEntity<FeeResponse> create(@Valid @RequestBody FeeRequest request) {
         return ResponseEntity.ok(feeService.createFee(request));

@@ -22,6 +22,11 @@ public class AttendanceController {
         this.attendanceService = attendanceService;
     }
 
+    @GetMapping
+    public ResponseEntity<List<AttendanceResponse>> getAllToday() {
+        return ResponseEntity.ok(attendanceService.getAttendanceByDate(LocalDate.now()));
+    }
+
     @PostMapping
     public ResponseEntity<AttendanceResponse> markAttendance(@Valid @RequestBody AttendanceRequest request) {
         return ResponseEntity.ok(attendanceService.markAttendance(request));

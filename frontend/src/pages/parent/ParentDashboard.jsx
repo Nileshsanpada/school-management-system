@@ -15,48 +15,111 @@ export default function ParentDashboard() {
   return (
     <div>
       <div className="page-header">
-        <h1>Welcome, {profile.name}</h1>
+        <div>
+          <h1>Welcome, {profile.name} 👋</h1>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', marginTop: '4px' }}>
+            EduCore Parent Portal &mdash; Track your child's academic progress, attendance & fees
+          </p>
+        </div>
       </div>
       
-      <h3 style={{ marginBottom: '16px' }}>My Children</h3>
+      <h3 style={{ marginBottom: '16px', fontSize: '18px', fontWeight: '700' }}>My Children</h3>
       
       {profile.children && profile.children.length > 0 ? (
-        <div className="stats-grid">
+        <div className="stat-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))' }}>
           {profile.children.map(child => (
             <div 
               key={child.id} 
               className="card" 
-              style={{ cursor: 'pointer', transition: 'transform 0.2s' }}
+              style={{ cursor: 'pointer', transition: 'all var(--transition-fast)' }}
               onClick={() => navigate(`/parent/child/${child.id}`)}
-              onMouseOver={e => e.currentTarget.style.transform = 'translateY(-4px)'}
-              onMouseOut={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', gap: '14px' }}>
                 <div style={{ 
-                  width: '50px', height: '50px', borderRadius: '25px', 
-                  backgroundColor: 'var(--primary)', color: 'white',
+                  width: '52px', height: '52px', borderRadius: 'var(--radius-md)', 
+                  background: 'linear-gradient(135deg, var(--primary), #8b5cf6)', color: '#ffffff',
                   display: 'flex', justifyContent: 'center', alignItems: 'center',
-                  fontSize: '20px', fontWeight: 'bold', marginRight: '16px'
+                  fontSize: '22px', fontWeight: '800',
+                  boxShadow: '0 4px 12px var(--primary-glow)'
                 }}>
                   {child.firstName[0]}
                 </div>
                 <div>
-                  <h3 style={{ margin: 0 }}>{child.firstName} {child.lastName}</h3>
-                  <div style={{ color: 'var(--text-secondary)', fontSize: '14px' }}>ID: {child.studentId}</div>
+                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: 'var(--text-primary)' }}>
+                    {child.firstName} {child.lastName}
+                  </h3>
+                  <div style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                    Student ID: <span style={{ fontWeight: '600', color: 'var(--primary)' }}>{child.studentId}</span>
+                  </div>
                 </div>
               </div>
-              <div style={{ background: 'var(--bg)', padding: '12px', borderRadius: '4px' }}>
-                <p style={{ margin: '0 0 8px 0', fontSize: '14px' }}><strong>Class:</strong> {child.className || '-'}</p>
-                <p style={{ margin: 0, fontSize: '14px' }}><strong>Section:</strong> {child.sectionName || '-'}</p>
+
+              <div style={{ 
+                background: 'var(--bg-surface-elevated)', 
+                padding: '14px', 
+                borderRadius: 'var(--radius-md)',
+                border: '1px solid var(--border-color)',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(2, 1fr)',
+                gap: '8px',
+                fontSize: '13px'
+              }}>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Class:</span>{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>{child.className || '-'}</strong>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)' }}>Section:</span>{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>{child.sectionName || '-'}</strong>
+                </div>
+                <div style={{ gridColumn: 'span 2' }}>
+                  <span style={{ color: 'var(--text-muted)' }}>Academic Year:</span>{' '}
+                  <strong style={{ color: 'var(--text-primary)' }}>{child.academicYearName || '2026-2027'}</strong>
+                </div>
               </div>
-              <div style={{ marginTop: '16px', textAlign: 'center' }}>
-                <span className="btn btn-primary" style={{ display: 'inline-block', width: '100%' }}>View Dashboard</span>
+
+              <div style={{ marginTop: '16px' }}>
+                <button className="btn btn-primary" style={{ width: '100%', padding: '10px' }}>
+                  View Full Child Dashboard →
+                </button>
               </div>
             </div>
           ))}
         </div>
       ) : (
-        <div className="empty-state">No children associated with this account.</div>
+        <div className="card" style={{ textAlign: 'center', padding: '36px 20px', maxWidth: '600px', margin: '0 auto' }}>
+          <div style={{ fontSize: '48px', marginBottom: '14px' }}>👨‍👩‍👧</div>
+          <h3 style={{ fontSize: '19px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '8px' }}>
+            No Students Linked Yet
+          </h3>
+          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', lineHeight: '1.5', marginBottom: '24px' }}>
+            Your parent account has been successfully created. The school administration will map your registered child (student ID) to your profile.
+          </p>
+
+          <div style={{ 
+            backgroundColor: 'var(--bg-surface-elevated)', 
+            border: '1px dashed var(--primary)', 
+            borderRadius: 'var(--radius-md)', 
+            padding: '16px',
+            marginBottom: '20px'
+          }}>
+            <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', marginBottom: '6px' }}>
+              💡 Demo Exploration Notice
+            </div>
+            <div style={{ fontSize: '13px', color: 'var(--text-secondary)', marginBottom: '12px' }}>
+              To test the Attendance %, Exam Results & Fee Ledger right now, you can explore the demo student (Aarav Sharma) or log in as the demo parent:
+            </div>
+            <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              <button 
+                type="button"
+                className="btn btn-primary btn-sm"
+                onClick={() => navigate('/parent/child/1')}
+              >
+                🎓 View Demo Student (Aarav Sharma)
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   )

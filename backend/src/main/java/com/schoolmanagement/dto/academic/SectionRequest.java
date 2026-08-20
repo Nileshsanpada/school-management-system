@@ -18,6 +18,5 @@ public class SectionRequest {
     @NotNull
     private Long classId;
 
-    @NotNull
     private Long academicYearId;
 }
