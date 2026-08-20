@@ -23,13 +23,22 @@ public class AttendanceController {
     }
 
     @GetMapping
-    public ResponseEntity<List<AttendanceResponse>> getAllToday() {
-        return ResponseEntity.ok(attendanceService.getAttendanceByDate(LocalDate.now()));
+    public ResponseEntity<List<AttendanceResponse>> getAttendance(
+            @RequestParam(required = false) Long classId,
+            @RequestParam(required = false) Long sectionId,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date) {
+        if (date == null) date = LocalDate.now();
+        if (classId != null && sectionId != null) {
+            return ResponseEntity.ok(attendanceService.getAttendanceByClassSectionDate(classId, sectionId, date));
+        } else if (classId != null) {
+            return ResponseEntity.ok(attendanceService.getAttendanceByClassAndDate(classId, date));
+        }
+        return ResponseEntity.ok(attendanceService.getAttendanceByDate(date));
     }
 
     @PostMapping
     public ResponseEntity<AttendanceResponse> markAttendance(@Valid @RequestBody AttendanceRequest request) {
-        return ResponseEntity.ok(attendanceService.markAttendance(request));
+        return ResponseEntity.ok(attendanceService.markOrUpdateAttendance(request));
     }
 
     @GetMapping("/student/{studentId}")

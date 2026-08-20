@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -37,22 +38,31 @@ public class AttendanceService {
     }
 
     @Transactional
-    public AttendanceResponse markAttendance(AttendanceRequest request) {
+    public AttendanceResponse markOrUpdateAttendance(AttendanceRequest request) {
         Student student = studentRepository.findById(request.getStudentId())
-                .orElseThrow(() -> new RuntimeException("Student not found"));
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + request.getStudentId()));
 
-        if (attendanceRepository.existsByStudentIdAndAttendanceDate(request.getStudentId(), request.getAttendanceDate())) {
-            throw new RuntimeException("Attendance already recorded for this student on this date");
+        LocalDate attendanceDate = request.getAttendanceDate() != null ? request.getAttendanceDate() : LocalDate.now();
+
+        // Upsert: if attendance already exists for this student+date, UPDATE it instead of throwing error
+        Optional<Attendance> existing = attendanceRepository.findByStudentIdAndAttendanceDate(request.getStudentId(), attendanceDate);
+        
+        Attendance attendance;
+        if (existing.isPresent()) {
+            attendance = existing.get();
+            attendance.setStatus(AttendanceStatus.valueOf(request.getStatus().toUpperCase()));
+            attendance.setRemarks(request.getRemarks());
+            logger.info("Updated attendance for student {} on {}", request.getStudentId(), attendanceDate);
+        } else {
+            attendance = new Attendance();
+            attendance.setStudent(student);
+            attendance.setAttendanceDate(attendanceDate);
+            attendance.setStatus(AttendanceStatus.valueOf(request.getStatus().toUpperCase()));
+            attendance.setRemarks(request.getRemarks());
+            logger.info("Created new attendance for student {} on {}", request.getStudentId(), attendanceDate);
         }
 
-        Attendance attendance = new Attendance();
-        attendance.setStudent(student);
-        attendance.setAttendanceDate(request.getAttendanceDate());
-        attendance.setStatus(AttendanceStatus.valueOf(request.getStatus().toUpperCase()));
-        attendance.setRemarks(request.getRemarks());
-
         attendance = attendanceRepository.save(attendance);
-
         return mapToResponse(attendance);
     }
 
@@ -64,6 +74,18 @@ public class AttendanceService {
 
     public List<AttendanceResponse> getAttendanceByDate(LocalDate date) {
         return attendanceRepository.findByAttendanceDate(date).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<AttendanceResponse> getAttendanceByClassAndDate(Long classId, LocalDate date) {
+        return attendanceRepository.findByClassAndDate(classId, date).stream()
+                .map(this::mapToResponse)
+                .collect(Collectors.toList());
+    }
+
+    public List<AttendanceResponse> getAttendanceByClassSectionDate(Long classId, Long sectionId, LocalDate date) {
+        return attendanceRepository.findByClassSectionAndDate(classId, sectionId, date).stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
@@ -107,7 +129,10 @@ public class AttendanceService {
         Long studentId = null;
         if (attendance.getStudent() != null) {
             studentId = attendance.getStudent().getId();
-            studentName = attendance.getStudent().getFirstName() + " " + attendance.getStudent().getLastName();
+            studentName = (attendance.getStudent().getFirstName() != null ? attendance.getStudent().getFirstName() : "") 
+                    + " " 
+                    + (attendance.getStudent().getLastName() != null ? attendance.getStudent().getLastName() : "");
+            studentName = studentName.trim();
         }
         return AttendanceResponse.builder()
                 .id(attendance.getId())
